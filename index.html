@@ -100,7 +100,6 @@
 		<br><br>
 
 		I changed one setting at a time in <code>pinned2.json</code>, starting from <code>ks = 5000</code>, <code>density = 150</code>, and <code>damping = 0.2%</code>.
-		The density in the simulator panel is one tenth of the scene value.
 		At default settings, the cloth swings down from horizontal and settles into a smooth drape.
 
 		<figure>
@@ -110,11 +109,6 @@
 
 		With <code>ks = 50</code>, the cloth starts by falling much like the default, then stretches farther and hangs lower with more ripples near the pins.
 		At <code>ks = 500000</code>, the integration becomes unstable at the chosen timestep, and the cloth keeps jerking and folding.
-
-		<br><br>
-
-		The initial acceleration due to gravity is the same at both densities.
-		At rest, there is less sag with <code>density = 50</code> and more with <code>density = 450</code> than in the default run.
 
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
@@ -128,12 +122,22 @@
 				  <figcaption>Unstable cloth, <code>ks = 500000</code></figcaption>
 				</td>
 			  </tr>
+			</table>
+		</div>
+
+		<br>
+
+		The initial acceleration due to gravity is the same at both densities.
+		At rest, there is less sag with <code>density = 50</code> and more with <code>density = 450</code> than in the default run.
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 			  <tr>
-				<td style="text-align: center;">
+				<td style="width: 50%; text-align: center;">
 				  <img src="assets/part_2_density_50.png" alt="Low density, density = 50" style="width: 100%; max-width: 400px; height: auto;"/>
 				  <figcaption>Low density, <code>density = 50</code></figcaption>
 				</td>
-				<td style="text-align: center;">
+				<td style="width: 50%; text-align: center;">
 				  <img src="assets/part_2_density_450.png" alt="High density, density = 450" style="width: 100%; max-width: 400px; height: auto;"/>
 				  <figcaption>High density, <code>density = 450</code></figcaption>
 				</td>
@@ -164,19 +168,13 @@
 		<br>
 
 		<figure>
-			<img src="assets/part_2_pinned_4.png" alt="pinned4.json at rest with all default parameters" style="width:70%"/>
-			<figcaption><code>pinned4.json</code> at rest with all default parameters</figcaption>
+			<img src="assets/part_2_pinned_4.png" alt="pinned4.json with default parameters" style="width:70%"/>
+			<figcaption><code>pinned4.json</code> with default parameters</figcaption>
 		</figure>
 
 		<h2>Part 3: Handling collisions with other objects</h2>
 		For a sphere, I check the new position against the radius and project a point inside the sphere radially onto its surface.
 		I move the mass a fraction <code>1 - friction</code> of the way from its previous position to the surface point.
-
-		<br><br>
-
-		For a plane, I check the signed distances of the old and new positions for a crossing and offset the intersection toward the side the mass came from.
-		I apply the same friction scaling between the previous position and the offset point.
-		I skip pinned masses in both collision checks.
 
 		<br><br>
 
@@ -205,9 +203,13 @@
 
 		<br>
 
+		For a plane, I check the signed distances of the old and new positions for a crossing and offset the intersection toward the side the mass came from.
+		I apply the same friction scaling between the previous position and the offset point.
+		I skip pinned masses in both collision checks.
+
 		<figure>
-			<img src="assets/part_3_plane.png" alt="plane.json at rest with default parameters" style="width:70%"/>
-			<figcaption><code>plane.json</code> at rest with default parameters</figcaption>
+			<img src="assets/part_3_plane.png" alt="plane.json with default parameters" style="width:70%"/>
+			<figcaption><code>plane.json</code> with default parameters</figcaption>
 		</figure>
 
 		<h2>Part 4: Handling self-collisions</h2>
@@ -244,8 +246,6 @@
 		<br>
 
 		At <code>density = 10</code>, the lower edge curls into a broad roll, while at <code>density = 1500</code> there are more small folds packed together at the base.
-		With <code>ks = 50</code>, I saw a low pile with sharper wrinkles than in the default run.
-		At <code>ks = 500000</code>, the integration is unstable, and the sheet wrinkles as it oscillates above the plane.
 
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
@@ -259,12 +259,22 @@
 				  <figcaption>Tightly packed folds, <code>density = 1500</code></figcaption>
 				</td>
 			  </tr>
+			</table>
+		</div>
+
+		<br>
+
+		With <code>ks = 50</code>, I saw a low pile with sharper wrinkles than in the default run.
+		At <code>ks = 500000</code>, the integration is unstable, and the sheet wrinkles as it oscillates above the plane.
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 			  <tr>
-				<td style="text-align: center;">
+				<td style="width: 50%; text-align: center;">
 				  <img src="assets/part_4_ks_50.png" alt="Low pile of folds, ks = 50" style="width: 100%; max-width: 400px; height: auto;"/>
 				  <figcaption>Low pile of folds, <code>ks = 50</code></figcaption>
 				</td>
-				<td style="text-align: center;">
+				<td style="width: 50%; text-align: center;">
 				  <img src="assets/part_4_ks_500000.png" alt="Unstable cloth, ks = 500000" style="width: 100%; max-width: 400px; height: auto;"/>
 				  <figcaption>Unstable cloth, <code>ks = 500000</code></figcaption>
 				</td>
@@ -312,7 +322,7 @@
 
 		<br>
 
-		I sampled the grayscale bedrock texture at the interpolated UV coordinates.
+		I sampled the bedrock texture at the interpolated UV coordinates.
 
 		<figure>
 			<img src="assets/bedrock.png" alt="Bedrock texture" width="96"/>
@@ -325,38 +335,46 @@
 		</figure>
 
 		For bump mapping, I use height differences between neighboring texels to perturb the normals used for shading.
-		For displacement, I also move vertices along their normals by the sampled height times the height scale.
-
-		<br><br>
-
-		I used the same brick height map, <code>texture_3.png</code>, for both effects.
-		In the mesh comparison, I used height scaling 0.2 and normal scaling 50 at both resolutions.
-		The brick detail is visible in both bump renders, and the 128 × 128 sphere has a rounder outline.
-		The displaced outline has broad steps and flat sections at 16 × 16, with finer ridges at 128 × 128 where the height map is sampled more densely.
-
-		<figure>
-			<img src="assets/part_5_bump_cloth.png" alt="Bump mapping on the cloth" style="width:70%"/>
-			<figcaption>Bump mapping on the cloth</figcaption>
-		</figure>
 
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 			  <tr>
 				<td style="width: 50%; text-align: center;">
-				  <img src="assets/part_5_bump_sphere.png" alt="Bump mapping on the default sphere mesh" style="width: 100%; max-width: 400px; height: auto;"/>
-				  <figcaption>Bump mapping on the default sphere mesh</figcaption>
+				  <img src="assets/part_5_bump_cloth.png" alt="Bump mapping on the cloth" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Bump mapping on the cloth</figcaption>
 				</td>
 				<td style="width: 50%; text-align: center;">
-				  <img src="assets/part_5_displacement_sphere.png" alt="Displacement mapping on the default sphere mesh" style="width: 100%; max-width: 400px; height: auto;"/>
-				  <figcaption>Displacement mapping on the default sphere mesh</figcaption>
+				  <img src="assets/part_5_bump_sphere.png" alt="Bump mapping on the sphere" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Bump mapping on the sphere</figcaption>
 				</td>
 			  </tr>
+			</table>
+		</div>
+
+		<br>
+
+		For displacement, I also move vertices along their normals by the sampled height times the height scale.
+		I used the same brick height map, <code>texture_3.png</code>, for both effects.
+
+		<figure>
+			<img src="assets/part_5_displacement_sphere.png" alt="Displacement mapping on the sphere" style="width:70%"/>
+			<figcaption>Displacement mapping on the sphere</figcaption>
+		</figure>
+
+		<br>
+
+		To compare the effect of mesh coarseness, I used height scaling 0.2 and normal scaling 50 at both resolutions.
+		The brick detail is visible in both bump renders, and the 128 × 128 sphere has a rounder outline.
+		The displaced outline has broad steps and flat sections at 16 × 16, with finer ridges at 128 × 128 where the height map is sampled more densely.
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 			  <tr>
-				<td style="text-align: center;">
+				<td style="width: 50%; text-align: center;">
 				  <img src="assets/part_5_bump_sphere_16.png" alt="Bump mapping on the 16 × 16 sphere" style="width: 100%; max-width: 400px; height: auto;"/>
 				  <figcaption>Bump mapping on the 16 × 16 sphere</figcaption>
 				</td>
-				<td style="text-align: center;">
+				<td style="width: 50%; text-align: center;">
 				  <img src="assets/part_5_displacement_sphere_16.png" alt="Displacement mapping on the 16 × 16 sphere" style="width: 100%; max-width: 400px; height: auto;"/>
 				  <figcaption>Displacement mapping on the 16 × 16 sphere</figcaption>
 				</td>
