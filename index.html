@@ -28,19 +28,18 @@
 	<body>
 		<div class="container">
 		<h1>CS184/284A Fall 2026 Homework 4 Write-Up</h1>
-		<div style="text-align: center;">Names: </div>
+		<div style="text-align: center;">Names: Jameson Liu</div>
 
 		<br>
 
-		Link to webpage: (TODO) <a href="https://cs184.eecs.berkeley.edu/fa26">cs184.eecs.berkeley.edu/fa26</a>
+		Link to webpage: <a href="https://cal-cs184-student.github.io/hw4-jl-writeup/">cal-cs184-student.github.io/hw4-jl-writeup/</a>
 
 		<br>
 
-		Link to GitHub repository: (TODO) <a href="https://cs184.eecs.berkeley.edu/fa26">cs184.eecs.berkeley.edu/fa26</a>
+		Link to GitHub repository: <a href="https://github.com/cal-cs184-student/hw4-jl">github.com/cal-cs184-student/hw4-jl</a>
 
 		<figure>
 			<img src="assets/clothsim.png" alt="Cloth draped over sphere" style="width:70%"/>
-			<figcaption>You can add images with captions!</figcaption>
 		</figure>
 
 		<!--
@@ -48,62 +47,353 @@
 		-->
 
 		<h2>Overview</h2>
-		Give a high-level overview of what you implemented in this homework. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the homework.
+		I built a cloth simulator with a spring grid, Verlet integration, and collisions with planes, spheres, and the cloth itself.
+		I implemented shaders for lighting, texture mapping, bump mapping, displacement, and mirror reflections.
+		The high-stiffness run stood out to me because the cloth kept shaking and folding once the integration became unstable.
+		I also found it interesting to see the same brick height map add detail to the shading and, with displacement, change the sphere's outline.
 
 		<h2>Part 1: Masses and springs</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		I connected the point masses with structural springs along rows and columns, shearing springs on the diagonals, and bending springs that span two grid steps.
 
-		<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
+		<br><br>
+
+		The cloth in <code>pinned2.json</code> is pinned at two corners along one edge.
+
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 			  <tr>
-				<td style="text-align: center;">
-				  <img src="assets/clothsim.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				<td style="width: 33.33%; text-align: center;">
+				  <img src="assets/part_1_view_1.png" alt="Oblique view of the full wireframe" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Oblique view of the full wireframe</figcaption>
 				</td>
-				<td style="text-align: center;">
-				  <img src="assets/clothsim.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				<td style="width: 33.33%; text-align: center;">
+				  <img src="assets/part_1_view_2.png" alt="Overhead view of the full wireframe" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Overhead view of the full wireframe</figcaption>
+				</td>
+				<td style="width: 33.33%; text-align: center;">
+				  <img src="assets/part_1_view_3.png" alt="Close-up of the full spring grid" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Close-up of the full spring grid</figcaption>
 				</td>
 			  </tr>
 			  <tr>
 				<td style="text-align: center;">
-				  <img src="assets/clothsim.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				  <img src="assets/part_1_no_shearing.png" alt="Structural and bending springs" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Structural and bending springs</figcaption>
 				</td>
 				<td style="text-align: center;">
-				  <img src="assets/clothsim.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				  <img src="assets/part_1_shearing_only.png" alt="Shearing springs only" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Shearing springs only</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="assets/part_1_all.png" alt="All three spring types" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>All three spring types</figcaption>
 				</td>
 			  </tr>
 			</table>
 		</div>
 
 		<h2>Part 2: Simulation via numerical integration</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		I add external forces and Hooke's law spring forces for each mass, using 20% of <code>ks</code> for bending springs.
+		For Verlet integration, I advance each free mass by its previous displacement times <code>1 - damping / 100</code> plus its acceleration times the square of the timestep.
+		After collision checks, I bring springs stretched beyond 110% of their rest length back to that limit by moving their free endpoints.
+
+		<br><br>
+
+		I changed one setting at a time in <code>pinned2.json</code>, starting from <code>ks = 5000</code>, <code>density = 150</code>, and <code>damping = 0.2%</code>.
+		The density in the simulator panel is one tenth of the scene value.
+		At default settings, the cloth swings down from horizontal and settles into a smooth drape.
+
+		<figure>
+			<img src="assets/part_2_pinned_2.png" alt="Two-corner cloth at rest with default settings" style="width:70%"/>
+			<figcaption>Two-corner cloth at rest with default settings</figcaption>
+		</figure>
+
+		With <code>ks = 50</code>, the cloth starts by falling much like the default, then stretches farther and hangs lower with more ripples near the pins.
+		At <code>ks = 500000</code>, the integration becomes unstable at the chosen timestep, and the cloth keeps jerking and folding.
+
+		<br><br>
+
+		The initial acceleration due to gravity is the same at both densities.
+		At rest, there is less sag with <code>density = 50</code> and more with <code>density = 450</code> than in the default run.
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_2_ks_50.png" alt="Low stiffness, ks = 50" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Low stiffness, <code>ks = 50</code></figcaption>
+				</td>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_2_ks_500000.png" alt="Unstable cloth, ks = 500000" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Unstable cloth, <code>ks = 500000</code></figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="assets/part_2_density_50.png" alt="Low density, density = 50" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Low density, <code>density = 50</code></figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="assets/part_2_density_450.png" alt="High density, density = 450" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>High density, <code>density = 450</code></figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<br>
+
+		At <code>damping = 0%</code>, the cloth swings past its hanging position and keeps moving after the default run has settled.
+		At <code>damping = 1%</code>, it descends more slowly and barely rebounds.
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_2_damping_0.png" alt="Cloth swinging with 0% damping" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Cloth swinging with 0% damping</figcaption>
+				</td>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_2_damping_1.png" alt="Cloth with 1% damping" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Cloth with 1% damping</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<br>
+
+		<figure>
+			<img src="assets/part_2_pinned_4.png" alt="pinned4.json at rest with all default parameters" style="width:70%"/>
+			<figcaption><code>pinned4.json</code> at rest with all default parameters</figcaption>
+		</figure>
 
 		<h2>Part 3: Handling collisions with other objects</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		For a sphere, I check the new position against the radius and project a point inside the sphere radially onto its surface.
+		I move the mass a fraction <code>1 - friction</code> of the way from its previous position to the surface point.
+
+		<br><br>
+
+		For a plane, I check the signed distances of the old and new positions for a crossing and offset the intersection toward the side the mass came from.
+		I apply the same friction scaling between the previous position and the offset point.
+		I skip pinned masses in both collision checks.
+
+		<br><br>
+
+		In <code>sphere.json</code>, the cloth wraps closest to the sphere and hangs lowest at <code>ks = 500</code>.
+		The drape is looser at the default <code>ks = 5000</code>.
+		At <code>ks = 50000</code>, the cloth spreads farther out and its corners hang higher.
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="width: 33.33%; text-align: center;">
+				  <img src="assets/part_3_sphere_500.png" alt="ks = 500" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption><code>ks = 500</code></figcaption>
+				</td>
+				<td style="width: 33.33%; text-align: center;">
+				  <img src="assets/part_3_sphere_5000.png" alt="ks = 5000" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption><code>ks = 5000</code></figcaption>
+				</td>
+				<td style="width: 33.33%; text-align: center;">
+				  <img src="assets/part_3_sphere_50000.png" alt="ks = 50000" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption><code>ks = 50000</code></figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<br>
+
+		<figure>
+			<img src="assets/part_3_plane.png" alt="plane.json at rest with default parameters" style="width:70%"/>
+			<figcaption><code>plane.json</code> at rest with default parameters</figcaption>
+		</figure>
 
 		<h2>Part 4: Handling self-collisions</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		After each Verlet update, I group the point masses into 3D cells using a spatial hash.
+
+		<br><br>
+
+		For each free mass, I check for other points in the same cell that are closer than twice the cloth thickness.
+		I compute a correction away from each nearby point by the missing separation, then average and scale those corrections before moving the mass.
+
+		<br><br>
+
+		In <code>selfCollision.json</code>, the cloth buckles at the bottom, piles up, and eventually spreads out across the plane.
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="width: 33.33%; text-align: center;">
+				  <img src="assets/part_4_early.png" alt="Early fold contact at the base" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Early fold contact at the base</figcaption>
+				</td>
+				<td style="width: 33.33%; text-align: center;">
+				  <img src="assets/part_4_folding.png" alt="Cloth piling into layers" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Cloth piling into layers</figcaption>
+				</td>
+				<td style="width: 33.33%; text-align: center;">
+				  <img src="assets/part_4_rest.png" alt="Mostly settled cloth with one raised fold" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Mostly settled cloth with one raised fold</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<br>
+
+		At <code>density = 10</code>, the lower edge curls into a broad roll, while at <code>density = 1500</code> there are more small folds packed together at the base.
+		With <code>ks = 50</code>, I saw a low pile with sharper wrinkles than in the default run.
+		At <code>ks = 500000</code>, the integration is unstable, and the sheet wrinkles as it oscillates above the plane.
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_4_density_10.png" alt="Broad curl, density = 10" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Broad curl, <code>density = 10</code></figcaption>
+				</td>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_4_density_1500.png" alt="Tightly packed folds, density = 1500" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Tightly packed folds, <code>density = 1500</code></figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="assets/part_4_ks_50.png" alt="Low pile of folds, ks = 50" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Low pile of folds, <code>ks = 50</code></figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="assets/part_4_ks_500000.png" alt="Unstable cloth, ks = 500000" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Unstable cloth, <code>ks = 500000</code></figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
 
 		<h2>Part 5: Shaders</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		A shader program is a set of linked GPU stages for projecting and shading geometry.
+		In the vertex stage, I project each vertex into clip space and pass along attributes such as normals and texture coordinates to be interpolated across the triangle.
+		In the fragment stage, I use the interpolated attributes with uniforms such as the light position and textures to compute a color.
 
-		<h2>(Optional) Part 6: Extra Credit - Additional cloth simulation features!</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		
-		<h2>Additional Notes (please remove)</h2>
-		<ul>
-			<li>You can also add code if you'd like as so: <code>code code code</code></li>
-			<li>If you'd like to add math equations, 
-				<ul>
-					<li>You can write inline equations like so: \( a^2 + b^2 = c^2 \)</li>
-					<li>You can write display equations like so: \[ a^2 + b^2 = c^2 \]</li>
-				</ul>
-			</li>
-		</ul>
+		<br><br>
+
+		For Blinn–Phong shading, I add ambient, diffuse, and specular terms.
+		I use 10% of the base color for ambient light everywhere on the surface.
+		For diffuse light, I multiply the base color by the clamped dot product of the normal and light direction.
+		For specular light, I raise the clamped dot product of the normal and the halfway vector between the light and view directions to the 32nd power and scale it by 0.5.
+		I scale both diffuse and specular by the light intensity divided by the squared distance to the light.
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_5_phong_ambient.png" alt="Blinn–Phong ambient only" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Blinn–Phong ambient only</figcaption>
+				</td>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_5_phong_diffuse.png" alt="Blinn–Phong diffuse only" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Blinn–Phong diffuse only</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="assets/part_5_phong_specular.png" alt="Blinn–Phong specular only" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Blinn–Phong specular only</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="assets/part_5_phong_all.png" alt="Full Blinn–Phong" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Full Blinn–Phong</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<br>
+
+		I sampled the grayscale bedrock texture at the interpolated UV coordinates.
+
+		<figure>
+			<img src="assets/bedrock.png" alt="Bedrock texture" width="96"/>
+			<figcaption>Bedrock texture</figcaption>
+		</figure>
+
+		<figure>
+			<img src="assets/part_5_custom.png" alt="Cloth with the bedrock texture" style="width:70%"/>
+			<figcaption>Cloth with the bedrock texture</figcaption>
+		</figure>
+
+		For bump mapping, I use height differences between neighboring texels to perturb the normals used for shading.
+		For displacement, I also move vertices along their normals by the sampled height times the height scale.
+
+		<br><br>
+
+		I used the same brick height map, <code>texture_3.png</code>, for both effects.
+		In the mesh comparison, I used height scaling 0.2 at both resolutions and normal scaling 100 at 16 × 16 and 50 at 128 × 128.
+		The brick detail is visible in both bump renders, and the 128 × 128 sphere has a rounder outline.
+		The displaced outline has broad steps and flat sections at 16 × 16, with finer ridges at 128 × 128 where the height map is sampled more densely.
+
+		<figure>
+			<img src="assets/part_5_bump_cloth.png" alt="Bump mapping on the cloth" style="width:70%"/>
+			<figcaption>Bump mapping on the cloth</figcaption>
+		</figure>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_5_bump_sphere.png" alt="Bump mapping on the default sphere mesh" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Bump mapping on the default sphere mesh</figcaption>
+				</td>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_5_displacement_sphere.png" alt="Displacement mapping on the default sphere mesh" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Displacement mapping on the default sphere mesh</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="assets/part_5_bump_sphere_16.png" alt="Bump mapping on the 16 × 16 sphere" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Bump mapping on the 16 × 16 sphere</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="assets/part_5_displacement_sphere_16.png" alt="Displacement mapping on the 16 × 16 sphere" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Displacement mapping on the 16 × 16 sphere</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="assets/part_5_bump_sphere_128.png" alt="Bump mapping on the 128 × 128 sphere" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Bump mapping on the 128 × 128 sphere</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="assets/part_5_displacement_sphere_128.png" alt="Displacement mapping on the 128 × 128 sphere" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Displacement mapping on the 128 × 128 sphere</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<br>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_5_mirror_cloth.png" alt="Mirror shader on the cloth" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Mirror shader on the cloth</figcaption>
+				</td>
+				<td style="width: 50%; text-align: center;">
+				  <img src="assets/part_5_mirror_sphere.png" alt="Mirror shader on the sphere" style="width: 100%; max-width: 400px; height: auto;"/>
+				  <figcaption>Mirror shader on the sphere</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<h2>Acknowledgement of AI</h2>
+		I used an LLM to improve the wording of the write-up and cleanup the code.
+		I did not use it to replace my learning or understanding of the material.
 		</div>
 	</body>
 </html>
